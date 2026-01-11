@@ -1,3 +1,4 @@
+
 name: Build rtcping
 
 on:
@@ -47,7 +48,22 @@ jobs:
       - name: Display downloaded files
         run: ls -R artifacts
 
+      - name: Extract version from Cargo.toml
+        id: cargo_version
+        run: |
+          VERSION=$(grep '^version =' Cargo.toml | head -n1 | sed 's/version = "//;s/"//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create tag for release
+        id: create_tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag v${{ steps.cargo_version.outputs.version }}
+          git push origin v${{ steps.cargo_version.outputs.version }}
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/**/rtcping*
+          tag_name: v${{ steps.cargo_version.outputs.version }}
