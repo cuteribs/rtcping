@@ -3,6 +3,9 @@ name: Build rtcping
 
 on:
   workflow_dispatch:
+    
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -41,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
