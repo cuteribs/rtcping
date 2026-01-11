@@ -23,6 +23,8 @@ Create a simple CLI tool to measure TCP connection latency to a target host and 
 [MODIFY] Cargo.toml
 - Add dependencies: `clap`, `ctrlc`.
 
+[New] README.md
+
 ## Verification Plan
 - Automated Tests
   - Run `cargo test` once tests are implemented.
