@@ -34,10 +34,19 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Compress binary
+        if: matrix.os != 'macos-latest'
         uses: svenstaro/upx-action@v2
         with:
           file: target/${{ matrix.target }}/release/rtcping${{ matrix.os == 'windows-latest' && '.exe' || '' }}
           args: --best
+          strip: true
+
+      - name: Compress binary (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: svenstaro/upx-action@v2
+        with:
+          file: target/${{ matrix.target }}/release/rtcping
+          args: --best --force-macos
           strip: true
 
       - name: Upload artifact
