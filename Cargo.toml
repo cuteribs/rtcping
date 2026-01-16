@@ -2,6 +2,19 @@
 name = "rtcping"
 version = "0.1.0"
 edition = "2024"
+authors = ["cuteribs"]
+description = "A TCP latency measurement tool similar to ping but for TCP connections"
+license = "MIT"
+repository = "https://github.com/cuteribs/rtcping"
+homepage = "https://github.com/cuteribs/rtcping"
+documentation = "https://github.com/cuteribs/rtcping#readme"
+readme = "README.md"
+keywords = ["tcp", "ping", "latency", "network", "diagnostics"]
+categories = ["command-line-utilities", "network-programming"]
+
+[[bin]]
+name = "rtcping"
+path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.5.54", features = ["derive"] }

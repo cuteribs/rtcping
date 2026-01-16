@@ -1,0 +1,28 @@
+# Maintainer: cuteribs <your-email@example.com>
+pkgname=rtcping
+pkgver=0.1.0
+pkgrel=0
+pkgdesc="TCP latency measurement tool similar to ping but for TCP connections"
+url="https://github.com/cuteribs/rtcping"
+arch="all"
+license="MIT"
+depends=""
+makedepends="cargo rust"
+source="$pkgname-$pkgver.tar.gz::https://github.com/cuteribs/rtcping/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver"
+
+build() {
+	cargo build --release --locked
+}
+
+check() {
+	cargo test --release --locked
+}
+
+package() {
+	install -Dm755 target/release/rtcping "$pkgdir"/usr/bin/rtcping
+	install -Dm644 README.md "$pkgdir"/usr/share/doc/$pkgname/README.md
+	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+sha512sums="SKIP"

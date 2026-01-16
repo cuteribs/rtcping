@@ -1,0 +1,24 @@
+PackageIdentifier: cuteribs.rtcping
+PackageVersion: 0.1.0
+PackageName: rtcping
+Publisher: cuteribs
+License: MIT
+LicenseUrl: https://github.com/cuteribs/rtcping/blob/main/LICENSE
+ShortDescription: TCP latency measurement tool
+Description: A TCP latency measurement tool similar to ping but for TCP connections. Measures round-trip time for establishing TCP connections with warmup, statistics, and IPv4/IPv6 support.
+Moniker: rtcping
+Tags:
+- tcp
+- ping
+- latency
+- network
+- diagnostics
+- cli
+PackageUrl: https://github.com/cuteribs/rtcping
+Installers:
+- Architecture: x64
+  InstallerType: portable
+  InstallerUrl: https://github.com/cuteribs/rtcping/releases/download/v0.1.0/rtcping-windows-x86_64.exe
+  InstallerSha256: PLACEHOLDER_SHA256
+ManifestType: singleton
+ManifestVersion: 1.0.0

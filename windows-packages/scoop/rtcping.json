@@ -1,0 +1,21 @@
+{
+  "version": "0.1.0",
+  "description": "TCP latency measurement tool similar to ping but for TCP connections",
+  "homepage": "https://github.com/cuteribs/rtcping",
+  "license": "MIT",
+  "url": "https://github.com/cuteribs/rtcping/releases/download/v0.1.0/rtcping-windows-x86_64.exe",
+  "hash": "PLACEHOLDER_SHA256",
+  "bin": "rtcping-windows-x86_64.exe",
+  "shortcuts": [
+    [
+      "rtcping-windows-x86_64.exe",
+      "rtcping"
+    ]
+  ],
+  "checkver": {
+    "github": "https://github.com/cuteribs/rtcping"
+  },
+  "autoupdate": {
+    "url": "https://github.com/cuteribs/rtcping/releases/download/v$version/rtcping-windows-x86_64.exe"
+  }
+}

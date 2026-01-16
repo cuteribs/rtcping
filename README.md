@@ -13,12 +13,102 @@ A simple and lightweight CLI tool written in Rust to measure TCP connection late
 
 ## Installation
 
+### Linux
+
+#### Debian/Ubuntu (.deb)
+```bash
+# Download the .deb package from the latest release
+wget https://github.com/cuteribs/rtcping/releases/latest/download/rtcping_0.1.0_amd64.deb
+sudo dpkg -i rtcping_0.1.0_amd64.deb
+```
+
+#### Fedora/RHEL/CentOS (.rpm)
+```bash
+# Download the .rpm package from the latest release
+wget https://github.com/cuteribs/rtcping/releases/latest/download/rtcping-0.1.0-1.x86_64.rpm
+sudo rpm -i rtcping-0.1.0-1.x86_64.rpm
+```
+
+#### Arch Linux (AUR)
+```bash
+# Using yay or paru
+yay -S rtcping
+# Or manually
+git clone https://aur.archlinux.org/rtcping.git
+cd rtcping
+makepkg -si
+```
+
+#### Alpine Linux
+```bash
+# Add community repository if needed
+sudo apk add rtcping
+```
+
+#### Universal Binary
+```bash
+# Download and install manually
+wget https://github.com/cuteribs/rtcping/releases/latest/download/rtcping-linux-x86_64
+chmod +x rtcping-linux-x86_64
+sudo mv rtcping-linux-x86_64 /usr/local/bin/rtcping
+```
+
+### macOS
+
+#### Homebrew
+```bash
+brew tap cuteribs/rtcping
+brew install rtcping
+```
+
+#### Manual Installation
+```bash
+# For Intel Macs
+curl -LO https://github.com/cuteribs/rtcping/releases/latest/download/rtcping-macos-x86_64
+chmod +x rtcping-macos-x86_64
+sudo mv rtcping-macos-x86_64 /usr/local/bin/rtcping
+
+# For Apple Silicon Macs
+curl -LO https://github.com/cuteribs/rtcping/releases/latest/download/rtcping-macos-aarch64
+chmod +x rtcping-macos-aarch64
+sudo mv rtcping-macos-aarch64 /usr/local/bin/rtcping
+```
+
+### Windows
+
+#### Winget
+```powershell
+winget install cuteribs.rtcping
+```
+
+#### Chocolatey
+```powershell
+choco install rtcping
+```
+
+#### Scoop
+```powershell
+scoop bucket add cuteribs https://github.com/cuteribs/scoop-bucket
+scoop install rtcping
+```
+
+#### Manual Installation
+1. Download `rtcping-windows-x86_64.exe` from the [latest release](https://github.com/cuteribs/rtcping/releases/latest)
+2. Rename it to `rtcping.exe`
+3. Add it to a directory in your PATH
+
 ### From Source
 
 Ensure you have [Rust and Cargo](https://rustup.rs/) installed.
 
 ```bash
-git clone https://github.com/yourusername/rtcping.git
+cargo install --git https://github.com/cuteribs/rtcping
+```
+
+Or build locally:
+
+```bash
+git clone https://github.com/cuteribs/rtcping.git
 cd rtcping
 cargo build --release
 ```

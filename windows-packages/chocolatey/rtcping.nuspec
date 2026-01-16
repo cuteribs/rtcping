@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>rtcping</id>
+    <version>0.1.0</version>
+    <title>rtcping</title>
+    <authors>cuteribs</authors>
+    <owners>cuteribs</owners>
+    <licenseUrl>https://github.com/cuteribs/rtcping/blob/main/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/cuteribs/rtcping</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A TCP latency measurement tool similar to ping but for TCP connections. Measures round-trip time for establishing TCP connections with warmup, statistics, and IPv4/IPv6 support.</description>
+    <summary>TCP ping tool for measuring connection latency</summary>
+    <tags>tcp ping latency network diagnostics cli</tags>
+    <packageSourceUrl>https://github.com/cuteribs/rtcping</packageSourceUrl>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

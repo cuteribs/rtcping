@@ -1,0 +1,123 @@
+name: Build Linux Packages
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+
+      - name: Build .deb package
+        run: |
+          # Append deb configuration to Cargo.toml
+          cat Cargo.toml.deb >> Cargo.toml
+          cargo deb
+
+      - name: Upload .deb to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/debian/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-rpm:
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y rpm-build rust cargo rpmdevtools
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup RPM build tree
+        run: |
+          rpmdev-setuptree
+          cp linux-packages/rpm/rtcping.spec ~/rpmbuild/SPECS/
+          
+      - name: Download source tarball
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          curl -L -o ~/rpmbuild/SOURCES/v${VERSION}.tar.gz https://github.com/${{ github.repository }}/archive/v${VERSION}.tar.gz
+
+      - name: Build RPM
+        run: rpmbuild -ba ~/rpmbuild/SPECS/rtcping.spec
+
+      - name: Upload RPM to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ~/rpmbuild/RPMS/**/*.rpm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-aur:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Checkout AUR repository
+        uses: actions/checkout@v4
+        with:
+          repository: cuteribs/aur-rtcping
+          token: ${{ secrets.AUR_TOKEN }}
+          path: aur-rtcping
+
+      - name: Update PKGBUILD
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          cd aur-rtcping
+          
+          # Download source and calculate checksum
+          wget https://github.com/cuteribs/rtcping/archive/v${VERSION}.tar.gz
+          SHA256=$(sha256sum v${VERSION}.tar.gz | cut -d' ' -f1)
+          
+          # Update PKGBUILD
+          sed -i "s/pkgver=.*/pkgver=${VERSION}/" PKGBUILD
+          sed -i "s/sha256sums=.*/sha256sums=('${SHA256}')/" PKGBUILD
+          
+          # Generate .SRCINFO
+          docker run --rm -v "$PWD:/pkg" archlinux:latest bash -c "cd /pkg && pacman -Sy --noconfirm base-devel && su -c 'makepkg --printsrcinfo > .SRCINFO' nobody"
+          
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add PKGBUILD .SRCINFO
+          git commit -m "Update to v${VERSION}"
+          git push
+
+  update-alpine:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Checkout Alpine aports
+        uses: actions/checkout@v4
+        with:
+          repository: cuteribs/alpine-aports
+          token: ${{ secrets.ALPINE_TOKEN }}
+          path: alpine-aports
+
+      - name: Update APKBUILD
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          cd alpine-aports
+          
+          # Update APKBUILD
+          sed -i "s/pkgver=.*/pkgver=${VERSION}/" testing/rtcping/APKBUILD
+          
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add testing/rtcping/APKBUILD
+          git commit -m "testing/rtcping: upgrade to ${VERSION}"
+          git push

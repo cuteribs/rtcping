@@ -1,0 +1,21 @@
+[package]
+name = "rtcping"
+version = "0.1.0"
+authors = ["cuteribs"]
+license = "MIT"
+section = "net"
+priority = "optional"
+assets = [
+    ["target/release/rtcping", "usr/bin/", "755"],
+    ["README.md", "usr/share/doc/rtcping/", "644"],
+]
+extended-description = """\
+A TCP latency measurement tool similar to ping but for TCP connections.
+.
+Features:
+- TCP Ping: Measures the time taken to establish a TCP connection
+- Warmup Phase: Includes a configurable warmup period
+- Flexible Duration: Specify the number of pings or a fixed duration
+- Statistics: Provides min/avg/max RTT and packet loss percentage
+- IPv4/IPv6 Support: Force resolution to either IPv4 or IPv6
+"""

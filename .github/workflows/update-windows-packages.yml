@@ -1,0 +1,120 @@
+name: Update Windows Packages
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-winget:
+    runs-on: windows-latest
+    steps:
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download Windows binary
+        shell: pwsh
+        run: |
+          $VERSION = "${{ steps.version.outputs.VERSION }}"
+          Invoke-WebRequest -Uri "https://github.com/cuteribs/rtcping/releases/download/v$VERSION/rtcping-windows-x86_64.exe" -OutFile "rtcping.exe"
+          $hash = (Get-FileHash -Path "rtcping.exe" -Algorithm SHA256).Hash
+          echo "WIN_SHA=$hash" >> $env:GITHUB_ENV
+
+      - name: Submit to Winget
+        uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: cuteribs.rtcping
+          version: ${{ steps.version.outputs.VERSION }}
+          installers-regex: 'rtcping-windows-x86_64\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
+
+  update-scoop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Checkout scoop bucket
+        uses: actions/checkout@v4
+        with:
+          repository: cuteribs/scoop-bucket
+          token: ${{ secrets.SCOOP_TOKEN }}
+          path: scoop-bucket
+
+      - name: Download and hash binary
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          wget https://github.com/cuteribs/rtcping/releases/download/v${VERSION}/rtcping-windows-x86_64.exe
+          echo "WIN_SHA=$(sha256sum rtcping-windows-x86_64.exe | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Update Scoop manifest
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          cd scoop-bucket
+          
+          cat > bucket/rtcping.json <<EOF
+          {
+            "version": "${VERSION}",
+            "description": "TCP latency measurement tool similar to ping but for TCP connections",
+            "homepage": "https://github.com/cuteribs/rtcping",
+            "license": "MIT",
+            "url": "https://github.com/cuteribs/rtcping/releases/download/v${VERSION}/rtcping-windows-x86_64.exe",
+            "hash": "${WIN_SHA}",
+            "bin": "rtcping-windows-x86_64.exe",
+            "shortcuts": [
+              [
+                "rtcping-windows-x86_64.exe",
+                "rtcping"
+              ]
+            ],
+            "checkver": {
+              "github": "https://github.com/cuteribs/rtcping"
+            },
+            "autoupdate": {
+              "url": "https://github.com/cuteribs/rtcping/releases/download/v\$version/rtcping-windows-x86_64.exe"
+            }
+          }
+          EOF
+          
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add bucket/rtcping.json
+          git commit -m "Update rtcping to v${VERSION}"
+          git push
+
+  update-chocolatey:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download and hash binary
+        shell: pwsh
+        run: |
+          $VERSION = "${{ steps.version.outputs.VERSION }}"
+          Invoke-WebRequest -Uri "https://github.com/cuteribs/rtcping/releases/download/v$VERSION/rtcping-windows-x86_64.exe" -OutFile "rtcping.exe"
+          $hash = (Get-FileHash -Path "rtcping.exe" -Algorithm SHA256).Hash
+          echo "WIN_SHA=$hash" >> $env:GITHUB_ENV
+
+      - name: Update Chocolatey package
+        shell: pwsh
+        run: |
+          $VERSION = "${{ steps.version.outputs.VERSION }}"
+          
+          # Update nuspec
+          (Get-Content windows-packages/chocolatey/rtcping.nuspec) -replace '<version>.*</version>', "<version>$VERSION</version>" | Set-Content windows-packages/chocolatey/rtcping.nuspec
+          
+          # Update install script
+          (Get-Content windows-packages/chocolatey/tools/chocolateyinstall.ps1) -replace "v[0-9]+\.[0-9]+\.[0-9]+", "v$VERSION" | Set-Content windows-packages/chocolatey/tools/chocolateyinstall.ps1
+          (Get-Content windows-packages/chocolatey/tools/chocolateyinstall.ps1) -replace "PLACEHOLDER_SHA256", "$env:WIN_SHA" | Set-Content windows-packages/chocolatey/tools/chocolateyinstall.ps1
+          
+          # Pack and push (requires CHOCOLATEY_API_KEY secret)
+          choco pack windows-packages/chocolatey/rtcping.nuspec
+          choco push rtcping.$VERSION.nupkg --source https://push.chocolatey.org/ --api-key ${{ secrets.CHOCOLATEY_API_KEY }}

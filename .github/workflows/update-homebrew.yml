@@ -1,0 +1,56 @@
+name: Update Homebrew Formula
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Checkout homebrew-rtcping repo
+        uses: actions/checkout@v4
+        with:
+          repository: cuteribs/homebrew-rtcping
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: homebrew-rtcping
+
+      - name: Download release assets and calculate SHA256
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          
+          # Download all binaries
+          wget https://github.com/cuteribs/rtcping/releases/download/v${VERSION}/rtcping-macos-x86_64
+          wget https://github.com/cuteribs/rtcping/releases/download/v${VERSION}/rtcping-macos-aarch64
+          wget https://github.com/cuteribs/rtcping/releases/download/v${VERSION}/rtcping-linux-x86_64
+          wget https://github.com/cuteribs/rtcping/releases/download/v${VERSION}/rtcping-linux-aarch64
+          
+          # Calculate SHA256
+          echo "INTEL_SHA=$(sha256sum rtcping-macos-x86_64 | cut -d' ' -f1)" >> $GITHUB_ENV
+          echo "ARM_SHA=$(sha256sum rtcping-macos-aarch64 | cut -d' ' -f1)" >> $GITHUB_ENV
+          echo "LINUX_SHA=$(sha256sum rtcping-linux-x86_64 | cut -d' ' -f1)" >> $GITHUB_ENV
+          echo "LINUX_ARM_SHA=$(sha256sum rtcping-linux-aarch64 | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Update Formula
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          cd homebrew-rtcping/Formula
+          
+          sed -i "s/version \".*\"/version \"${VERSION}\"/" rtcping.rb
+          sed -i "s/PLACEHOLDER_INTEL_SHA256/${INTEL_SHA}/" rtcping.rb
+          sed -i "s/PLACEHOLDER_ARM_SHA256/${ARM_SHA}/" rtcping.rb
+          sed -i "s/PLACEHOLDER_LINUX_SHA256/${LINUX_SHA}/" rtcping.rb
+          sed -i "s/PLACEHOLDER_LINUX_ARM_SHA256/${LINUX_ARM_SHA}/" rtcping.rb
+
+      - name: Commit and push changes
+        run: |
+          cd homebrew-rtcping
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add Formula/rtcping.rb
+          git commit -m "Update rtcping to v${{ steps.version.outputs.VERSION }}"
+          git push
